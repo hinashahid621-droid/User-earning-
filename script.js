@@ -1,12 +1,11 @@
 // =======================================================
-// APNI WOHI SUPABASE DETAILS YAHAN DAALEIN
+// AAPKI DETAILS IS CODE MEIN PEHLE SE DAAL DI GAYI HAIN
 // =======================================================
 const SUPABASE_URL = 'https://spxyppywdbgdjithesrd.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNweHlwcHl3ZGJnZGppdGhlc3JkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwOTcxODYsImV4cCI6MjA3MjY3MzE4Nn0.9fFcEBHhTmiGfp1K_J6RcgadkO1njcIRif_S6_a7KGI'; 
-// =======================================================
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNweHlwcHl3ZGJnZGppdGhlc3JkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwOTcxODYsImV4cCI6MjA3MjY3MzE4Nn0.9fFcEBHhTmiGfp1K_J6RcgadkO1njcIRif_S6_a7KGI';
 
-// *** YEH LINE THEEK KI GAYI HAI ***
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// =======================================================
 
 // DOM Elements
 const loginView = document.getElementById('login-view');
@@ -42,4 +41,39 @@ signupForm.addEventListener('submit', async (event) => {
     if (error) {
         alert("Error signing up: " + error.message);
     } else {
-        alert("Signup successful! Please che
+        alert("Signup successful! Please check your email to verify.");
+        loginView.style.display = 'block';
+        signupView.style.display = 'none';
+    }
+});
+
+// Login Function
+loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    if (error) {
+        alert("Error logging in: ".concat(error.message));
+    } else {
+        showDashboard(data.user);
+    }
+});
+
+// Logout Function
+logoutButton.addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    dashboardView.style.display = 'none';
+    loginView.style.display = 'block';
+});
+
+// Function to show dashboard
+function showDashboard(user) {
+    loginView.style.display = 'none';
+    signupView.style.display = 'none';
+    dashboardView.style.display = 'block';
+    userEmailSpan.textContent = user.email;
+    userPointsSpan.textContent = '0';
+    }
