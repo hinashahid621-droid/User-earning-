@@ -52,7 +52,7 @@ signupForm.addEventListener('submit', async (e) => {
         .select().single();
     
     if (error) {
-        alert("Error: " + error.message);
+        alert("Error: " + (error.message.includes('unique constraint') ? "Email or Referral Code already exists." : error.message));
     } else {
         alert("Signup successful! Please login.");
         showView('login-view');
@@ -89,26 +89,49 @@ function updateDashboard() {
     }
 }
 
+// =====================================================
+// YEH FUNCTION POORA BADAL GAYA HAI
+// =====================================================
 async function performTask() {
     const taskButton = document.getElementById('task-button');
     taskButton.disabled = true;
-    taskButton.textContent = "Processing...";
+    taskButton.textContent = "Loading Ad...";
 
-    const newPoints = currentUser.points + 10;
-    const { error } = await supabaseClient.from('users').update({ points: newPoints }).eq('id', currentUser.id);
-
-    if (error) {
-        alert("Error updating points.");
-    } else {
-        currentUser.points = newPoints;
-        updateDashboard();
-        alert("You earned 10 PKR!");
+    // Check karein ke Monetag ka function mojood hai ya nahi
+    if (typeof show_9832522 !== 'function') {
+        alert("Ad provider is not available. Please try again later.");
+        taskButton.disabled = false;
+        taskButton.textContent = "Watch Ad (+10 PKR)";
+        return;
     }
     
-    taskButton.disabled = false;
-    taskButton.textContent = "Watch Ad (+10 PKR)";
+    // Monetag ka function call karein
+    show_9832522().then(async () => {
+        // Yeh code ad dekhne ke BAAD chalega
+        
+        const newPoints = currentUser.points + 10;
+        const { error } = await supabaseClient.from('users').update({ points: newPoints }).eq('id', currentUser.id);
+
+        if (error) {
+            alert("Error updating points.");
+        } else {
+            currentUser.points = newPoints;
+            updateDashboard();
+            alert("You earned 10 PKR!");
+        }
+        
+        taskButton.disabled = false;
+        taskButton.textContent = "Watch Ad (+10 PKR)";
+
+    }).catch(() => {
+        // Agar ad mein koi error aaye ya user usay band kar de
+        alert("Ad was not completed. No points earned.");
+        taskButton.disabled = false;
+        taskButton.textContent = "Watch Ad (+10 PKR)";
+    });
 }
 
+// --- WITHDRAWAL ---
 withdrawForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const amount = parseInt(document.getElementById('withdraw-amount').value);
