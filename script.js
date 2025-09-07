@@ -44,7 +44,6 @@ signupForm.addEventListener('submit', async (e) => {
     const password = document.getElementById('signup-password').value;
     const referralCode = document.getElementById('signup-referral').value.trim();
     
-    // Create a unique referral code for the new user
     const newReferralCode = name.split(' ')[0].toLowerCase() + Math.random().toString(36).substring(2, 6);
 
     const { data, error } = await supabaseClient
@@ -53,7 +52,7 @@ signupForm.addEventListener('submit', async (e) => {
         .select().single();
     
     if (error) {
-        alert("Error: " + (error.message.includes('unique constraint') ? "Email or Referral Code already exists." : error.message));
+        alert("Error: " + error.message);
     } else {
         alert("Signup successful! Please login.");
         showView('login-view');
@@ -77,13 +76,11 @@ loginForm.addEventListener('submit', async (e) => {
     }
 });
 
-// --- LOGOUT ---
 function logout() {
     currentUser = null;
     showView('login-view');
 }
 
-// --- DASHBOARD ---
 function updateDashboard() {
     if (currentUser) {
         userNameDisplay.textContent = currentUser.name;
@@ -92,16 +89,12 @@ function updateDashboard() {
     }
 }
 
-// --- TASK ---
 async function performTask() {
     const taskButton = document.getElementById('task-button');
     taskButton.disabled = true;
     taskButton.textContent = "Processing...";
 
-    // This is where Monetag Ad code will go later.
-    // For now, we simulate watching an ad.
     const newPoints = currentUser.points + 10;
-
     const { error } = await supabaseClient.from('users').update({ points: newPoints }).eq('id', currentUser.id);
 
     if (error) {
@@ -116,7 +109,6 @@ async function performTask() {
     taskButton.textContent = "Watch Ad (+10 PKR)";
 }
 
-// --- WITHDRAWAL ---
 withdrawForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const amount = parseInt(document.getElementById('withdraw-amount').value);
@@ -130,7 +122,6 @@ withdrawForm.addEventListener('submit', async (e) => {
     const withdrawButton = withdrawForm.querySelector('button');
     withdrawButton.disabled = true;
 
-    // 1. Create withdrawal request
     const { error: reqError } = await supabaseClient
         .from('withdrawals')
         .insert([{ user_id: currentUser.id, amount, method, account_number: number, status: 'pending' }]);
@@ -141,15 +132,10 @@ withdrawForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    // 2. Deduct points from user
     const newPoints = currentUser.points - amount;
-    const { error: userError } = await supabaseClient
-        .from('users')
-        .update({ points: newPoints })
-        .eq('id', currentUser.id);
+    const { error: userError } = await supabaseClient.from('users').update({ points: newPoints }).eq('id', currentUser.id);
 
     if (userError) {
-        // This is a critical error, ideally we would reverse the withdrawal request
         alert("Error updating your balance. Please contact support.");
         withdrawButton.disabled = false;
         return;
@@ -157,21 +143,10 @@ withdrawForm.addEventListener('submit', async (e) => {
     
     currentUser.points = newPoints;
     
-    // 3. (Referral Bonus Logic)
     if (currentUser.referred_by) {
-        // Find the referrer
-        const { data: referrer, error: findError } = await supabaseClient
-            .from('users')
-            .select('id, points')
-            .eq('referral_code', currentUser.referred_by)
-            .single();
-
+        const { data: referrer } = await supabaseClient.from('users').select('id, points').eq('referral_code', currentUser.referred_by).single();
         if (referrer) {
-            // Add 20 points to the referrer
-            await supabaseClient
-                .from('users')
-                .update({ points: referrer.points + 20 })
-                .eq('id', referrer.id);
+            await supabaseClient.from('users').update({ points: referrer.points + 20 }).eq('id', referrer.id);
         }
     }
     
