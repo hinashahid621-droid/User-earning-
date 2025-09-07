@@ -5,13 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Earning App</title>
     
-    <!-- ============================================= -->
-    <!-- MONETAG SCRIPT YAHAN ADD KIYA GAYA HAI -->
+    <!-- MONETAG SCRIPT -->
     <script src='//libtl.com/sdk.js' data-zone='9832522' data-sdk='show_9832522'></script>
-    <!-- ============================================= -->
     
     <style>
-        /* CSS code waisa hi rahega, usay badalne ki zaroorat nahi */
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 6px 12px rgba(0,0,0,0.1); width: 100%; max-width: 420px; }
         .view { display: none; }
@@ -26,7 +23,7 @@
         #dashboard .info-box { background-color: #e7f3ff; border: 1px solid #1877f2; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
         #dashboard .info-box h3 { margin: 0 0 10px 0; color: #1c1e21; }
         #dashboard .info-box p { margin: 0; font-size: 24px; font-weight: bold; color: #1877f2; }
-        #dashboard .referral-box { background: #f5f5f5; padding: 10px; border-radius: 6px; margin-top: 20px; }
+        #dashboard .referral-box { background: #f5f5f5; padding: 10px; border-radius: 6px; margin-top: 20px; text-align: center; }
         #dashboard .referral-box code { background: #e0e0e0; padding: 4px 8px; border-radius: 4px; }
         .btn-secondary { background-color: #42b72a; }
         .btn-danger { background-color: #fa3e3e; }
@@ -34,14 +31,65 @@
     </style>
 </head>
 <body>
-    <!-- Baaqi ka HTML code waisa hi rahega -->
     <div class="container">
-        <div id="login-view" class="view active"> <h2>Login to Your Account</h2> <form id="login-form"> <input type="email" id="login-email" placeholder="Email Address" required> <input type="password" id="login-password" placeholder="Password" required> <button type="submit">Log In</button> </form> <div class="toggle-link">Don't have an account? <a id="show-signup">Create new account</a></div> </div>
-        <div id="signup-view" class="view"> <h2>Create a New Account</h2> <form id="signup-form"> <input type="text" id="signup-name" placeholder="Full Name" required> <input type="email" id="signup-email" placeholder="Email Address" required> <input type="password" id="signup-password" placeholder="New Password" required> <input type="text" id="signup-referral" placeholder="Referral Code (Optional)"> <button type="submit">Sign Up</button> </form> <div class="toggle-link">Already have an account? <a id="show-login">Log In</a></div> </div>
-        <div id="dashboard" class="view"> <h2>Welcome, <span id="user-name-display"></span>!</h2> <div class="info-box"> <h3>Your Balance</h3> <p><span id="user-points-display">0</span> PKR</p> </div> <button id="task-button" class="btn-secondary">Watch Ad (+10 PKR)</button> <button id="show-withdraw-button" class="btn-danger">Withdraw Funds</button> <div class="referral-box"> Your Referral Code: <code id="user-referral-code"></code> </div> <button id="logout-button" class="btn-light">Logout</button> </div>
-        <div id="withdraw-view" class="view"> <h2>Withdraw Funds</h2> <form id="withdraw-form"> <p>Minimum withdrawal is 500 PKR.</p> <select id="withdraw-method" required> <option value="">Select Payment Method</option> <option value="JazzCash">JazzCash</option> <option value="Easypaisa">Easypaisa</option> </select> <input type="text" id="withdraw-number" placeholder="Account Number" required> <input type="number" id="withdraw-amount" placeholder="Amount (PKR)" required> <button type="submit">Submit Request</button> </form> <button id="back-to-dashboard">Back to Dashboard</button> </div>
+        <!-- Login View -->
+        <div id="login-view" class="view active">
+            <h2>Login to Your Account</h2>
+            <form id="login-form">
+                <input type="email" id="login-email" placeholder="Email Address" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit">Log In</button>
+            </form>
+            <div class="toggle-link">Don't have an account? <a id="show-signup">Create new account</a></div>
+        </div>
+
+        <!-- Signup View -->
+        <div id="signup-view" class="view">
+            <h2>Create a New Account</h2>
+            <form id="signup-form">
+                <input type="text" id="signup-name" placeholder="Full Name" required>
+                <input type="email" id="signup-email" placeholder="Email Address" required>
+                <input type="password" id="signup-password" placeholder="New Password" required>
+                <input type="text" id="signup-referral" placeholder="Referral Code (Optional)">
+                <button type="submit">Sign Up</button>
+            </form>
+            <div class="toggle-link">Already have an account? <a id="show-login">Log In</a></div>
+        </div>
+
+        <!-- Dashboard View -->
+        <div id="dashboard" class="view">
+            <h2>Welcome, <span id="user-name-display"></span>!</h2>
+            <div class="info-box">
+                <h3>Your Balance</h3>
+                <p><span id="user-points-display">0</span> PKR</p>
+            </div>
+            <button id="task-button" class="btn-secondary">Watch Ad (+10 PKR)</button>
+            <button id="show-withdraw-button" class="btn-danger">Withdraw Funds</button>
+            <div class="referral-box">
+                Your Referral Code: <br> <code id="user-referral-code"></code>
+            </div>
+            <button id="logout-button" class="btn-light">Logout</button>
+        </div>
+
+        <!-- Withdraw View -->
+        <div id="withdraw-view" class="view">
+            <h2>Withdraw Funds</h2>
+            <form id="withdraw-form">
+                <p>Minimum withdrawal is 500 PKR.</p>
+                <select id="withdraw-method" required>
+                    <option value="">Select Payment Method</option>
+                    <option value="JazzCash">JazzCash</option>
+                    <option value="Easypaisa">Easypaisa</option>
+                </select>
+                <input type="text" id="withdraw-number" placeholder="Account Number" required>
+                <input type="number" id="withdraw-amount" placeholder="Amount (PKR)" required>
+                <button type="submit">Submit Request</button>
+            </form>
+            <button id="back-to-dashboard">Back to Dashboard</button>
+        </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>
-</html>
+    </html>
