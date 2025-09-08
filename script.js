@@ -60,18 +60,19 @@ async function performTask() {
     
     // Aapka diya gaya Monetag function call karein
     show_9832522({
-        type: 'inApp',
-        inAppSettings: {
-            frequency: 2,
-            capping: 0.1,
-            interval: 30,
-            timeout: 5,
-            everyPage: false
-        }
+      type: 'inApp',
+      inAppSettings: {
+        frequency: 2,
+        capping: 0.1,
+        interval: 30,
+        timeout: 5,
+        everyPage: false
+      }
     });
 
     // Hum assume kar rahe hain ke ad user ko nazar aa gaya hai
     // Hum foran points de denge
+    // 2 second ka delay daalte hain taake user ko lage ke ad load ho raha hai
     setTimeout(async () => {
         const newPoints = currentUser.points + 10;
         const { error } = await supabaseClient.from('users').update({ points: newPoints }).eq('id', currentUser.id);
