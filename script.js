@@ -36,66 +36,21 @@ function showView(viewId) {
     document.getElementById(viewId).classList.add('active');
 }
 
-// --- SIGNUP ---
-signupForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('signup-name').value;
-    const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value;
-    const referralCode = document.getElementById('signup-referral').value.trim();
-    
-    const newReferralCode = name.split(' ')[0].toLowerCase() + Math.random().toString(36).substring(2, 6);
+// --- AUTH FUNCTIONS (Signup, Login, etc.) ---
+signupForm.addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('signup-name').value; const email = document.getElementById('signup-email').value; const password = document.getElementById('signup-password').value; const referralCode = document.getElementById('signup-referral').value.trim(); const newReferralCode = name.split(' ')[0].toLowerCase() + Math.random().toString(36).substring(2, 6); const { data, error } = await supabaseClient.from('users').insert([{ name, email, password, points: 0, referral_code: newReferralCode, referred_by: referralCode || null }]).select().single(); if (error) { alert("Error: " + error.message); } else { alert("Signup successful! Please login."); signupForm.reset(); showView('login-view'); } });
+loginForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('login-email').value; const password = document.getElementById('login-password').value; const { data, error } = await supabaseClient.from('users').select('*').eq('email', email).eq('password', password).single(); if (error || !data) { alert("Invalid email or password."); } else { currentUser = data; updateDashboard(); showView('dashboard'); } });
+function logout() { currentUser = null; loginForm.reset(); showView('login-view'); }
+function updateDashboard() { if (currentUser) { userNameDisplay.textContent = currentUser.name; userPointsDisplay.textContent = currentUser.points; userReferralCodeDisplay.textContent = currentUser.referral_code; } }
 
-    const { data, error } = await supabaseClient
-        .from('users')
-        .insert([{ name, email, password, points: 0, referral_code: newReferralCode, referred_by: referralCode || null }])
-        .select().single();
-    
-    if (error) {
-        alert("Error: " + error.message);
-    } else {
-        alert("Signup successful! Please login.");
-        signupForm.reset();
-        showView('login-view');
-    }
-});
-
-// --- LOGIN ---
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-
-    const { data, error } = await supabaseClient.from('users').select('*').eq('email', email).eq('password', password).single();
-
-    if (error || !data) {
-        alert("Invalid email or password.");
-    } else {
-        currentUser = data;
-        updateDashboard();
-        showView('dashboard');
-    }
-});
-
-function logout() {
-    currentUser = null;
-    loginForm.reset();
-    showView('login-view');
-}
-
-function updateDashboard() {
-    if (currentUser) {
-        userNameDisplay.textContent = currentUser.name;
-        userPointsDisplay.textContent = currentUser.points;
-        userReferralCodeDisplay.textContent = currentUser.referral_code;
-    }
-}
-
+// =====================================================
+// YEH FUNCTION AAPKE DIYE GAYE CODE KE SATH UPDATE HUA HAI
+// =====================================================
 async function performTask() {
     const taskButton = document.getElementById('task-button');
     taskButton.disabled = true;
     taskButton.textContent = "Loading Ad...";
 
+    // Check karein ke Monetag ka function mojood hai ya nahi
     if (typeof show_9832522 !== 'function') {
         alert("Ad provider is not available. Please try again later.");
         taskButton.disabled = false;
@@ -103,7 +58,21 @@ async function performTask() {
         return;
     }
     
-    show_9832522().then(async () => {
+    // Aapka diya gaya Monetag function call karein
+    show_9832522({
+        type: 'inApp',
+        inAppSettings: {
+            frequency: 2,
+            capping: 0.1,
+            interval: 30,
+            timeout: 5,
+            everyPage: false
+        }
+    });
+
+    // Hum assume kar rahe hain ke ad user ko nazar aa gaya hai
+    // Hum foran points de denge
+    setTimeout(async () => {
         const newPoints = currentUser.points + 10;
         const { error } = await supabaseClient.from('users').update({ points: newPoints }).eq('id', currentUser.id);
 
@@ -117,59 +86,8 @@ async function performTask() {
         
         taskButton.disabled = false;
         taskButton.textContent = "Watch Ad (+10 PKR)";
-
-    }).catch(() => {
-        alert("Ad was not completed. No points earned.");
-        taskButton.disabled = false;
-        taskButton.textContent = "Watch Ad (+10 PKR)";
-    });
+    }, 2000); // 2 second ka delay
 }
 
-// --- WITHDRAWAL ---
-withdrawForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const amount = parseInt(document.getElementById('withdraw-amount').value);
-    const method = document.getElementById('withdraw-method').value;
-    const number = document.getElementById('withdraw-number').value;
-
-    if (amount < 500) return alert("Minimum withdrawal is 500 PKR.");
-    if (amount > currentUser.points) return alert("You don't have enough balance.");
-    if (!method || !number) return alert("Please fill all fields.");
-
-    const withdrawButton = withdrawForm.querySelector('button');
-    withdrawButton.disabled = true;
-
-    const { error: reqError } = await supabaseClient
-        .from('withdrawals')
-        .insert([{ user_id: currentUser.id, amount, method, account_number: number, status: 'pending' }]);
-
-    if (reqError) {
-        alert("Error submitting request: " + reqError.message);
-        withdrawButton.disabled = false;
-        return;
-    }
-
-    const newPoints = currentUser.points - amount;
-    const { error: userError } = await supabaseClient.from('users').update({ points: newPoints }).eq('id', currentUser.id);
-
-    if (userError) {
-        alert("Error updating your balance. Please contact support.");
-        withdrawButton.disabled = false;
-        return;
-    }
-    
-    currentUser.points = newPoints;
-    
-    if (currentUser.referred_by) {
-        const { data: referrer } = await supabaseClient.from('users').select('id, points').eq('referral_code', currentUser.referred_by).single();
-        if (referrer) {
-            await supabaseClient.from('users').update({ points: referrer.points + 20 }).eq('id', referrer.id);
-        }
-    }
-    
-    alert(`Withdrawal request for ${amount} PKR submitted successfully!`);
-    updateDashboard();
-    withdrawForm.reset();
-    showView('dashboard');
-    withdrawButton.disabled = false;
-});
+// --- WITHDRAWAL FUNCTION ---
+withdrawForm.addEventListener('submit', async (e) => { e.preventDefault(); const amount = parseInt(document.getElementById('withdraw-amount').value); const method = document.getElementById('withdraw-method').value; const number = document.getElementById('withdraw-number').value; if (amount < 500) return alert("Minimum withdrawal is 500 PKR."); if (amount > currentUser.points) return alert("You don't have enough balance."); if (!method || !number) return alert("Please fill all fields."); const withdrawButton = withdrawForm.querySelector('button'); withdrawButton.disabled = true; const { error: reqError } = await supabaseClient.from('withdrawals').insert([{ user_id: currentUser.id, amount, method, account_number: number, status: 'pending' }]); if (reqError) { alert("Error submitting request: " + reqError.message); withdrawButton.disabled = false; return; } const newPoints = currentUser.points - amount; const { error: userError } = await supabaseClient.from('users').update({ points: newPoints }).eq('id', currentUser.id); if (userError) { alert("Error updating your balance. Please contact support."); withdrawButton.disabled = false; return; } currentUser.points = newPoints; if (currentUser.referred_by) { const { data: referrer } = await supabaseClient.from('users').select('id, points').eq('referral_code', currentUser.referred_by).single(); if (referrer) { await supabaseClient.from('users').update({ points: referrer.points + 20 }).eq('id', referrer.id); } } alert(`Withdrawal request for ${amount} PKR submitted successfully!`); updateDashboard(); withdrawForm.reset(); showView('dashboard'); withdrawButton.disabled = false; });
